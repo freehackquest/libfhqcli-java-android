@@ -5,5 +5,6 @@ public interface FHQListener {
     void onServiceStopped();
     void onConnected();
     void onDisconnected();
-
+    void onChat(FHQChatMessage msg);
+    void onNotify(FHQNotification notify);
 }

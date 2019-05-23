@@ -1,8 +1,6 @@
 package com.freehackquest.sample;
 
 import android.app.Application;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.freehackquest.libfhqcli.FHQClient;

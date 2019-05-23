@@ -4,14 +4,20 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
+import com.freehackquest.libfhqcli.FHQChatMessage;
 import com.freehackquest.libfhqcli.FHQClient;
 import com.freehackquest.libfhqcli.FHQListener;
+import com.freehackquest.libfhqcli.FHQNotification;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements FHQListener {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -27,6 +33,10 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
     private EditText edt_password = null;
     private Button btn_login = null;
     private LinearLayout login_form = null;
+    private RecyclerView list_log = null;
+    private LogAdapter mAdapter;
+    private RecyclerView.LayoutManager layoutManager;
+    private ArrayList<String> log = new ArrayList();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +52,19 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
         edt_password = findViewById(R.id.edt_password);
         btn_login = findViewById(R.id.btn_login);
 
+
         edt_server.setText(getPref(PREF_SERVER, "wss://freehackquest.com/api-wss/"));
         edt_login.setText(getPref(PREF_LOGIN, "admin"));
         edt_password.setText(getPref(PREF_PASSWORD, "admin"));
+
+        list_log = findViewById(R.id.list_log);
+        list_log.setLayoutManager(layoutManager);
+        list_log.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(this);
+        list_log.setLayoutManager(layoutManager);
+        mAdapter = new LogAdapter();
+        list_log.setAdapter(mAdapter);
+
         FHQClient.listeners().add(this);
         initButtons();
     }
@@ -147,5 +167,15 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
     public void onDisconnected() {
         Log.i(TAG, "onDisconnected");
         updateStatuses();
+    }
+
+    @Override
+    public void onChat(FHQChatMessage msg) {
+
+    }
+
+    @Override
+    public void onNotify(FHQNotification notify) {
+
     }
 }

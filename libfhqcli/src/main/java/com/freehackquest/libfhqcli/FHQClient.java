@@ -118,6 +118,28 @@ public class FHQClient extends Service {
 
     public void onTextMessage(WebSocket websocket, String message) {
         Log.i(TAG, "Message: " + message);
+
+        String m = "";
+        String cmd = "";
+        JSONObject jsonMessage = null;
+        try {
+            jsonMessage = new JSONObject(message);
+            if (jsonMessage.has("m")) {
+                m = jsonMessage.getString("m");
+            }
+            if (jsonMessage.has("cmd")) {
+                cmd = jsonMessage.getString("cmd");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e(TAG, "" + e.getMessage());
+        }
+
+        if (cmd.equals("notify")) {
+            listeners().onNotify(new FHQNotification(jsonMessage));
+        } else if (cmd.equals("chat")) {
+            listeners().onChat(new FHQChatMessage(jsonMessage));
+        }
     }
 
     public void disconnect() {
