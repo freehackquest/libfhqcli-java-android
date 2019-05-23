@@ -17,6 +17,8 @@ import com.neovisionaries.ws.client.WebSocketFactory;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 public class FHQClient extends Service {
     private static final String TAG = FHQClient.class.getSimpleName();
 
@@ -28,15 +30,16 @@ public class FHQClient extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand");
-        // connect("wss://freehackquest.com/wss-api/");
-        connect("wss://freehackquest.com/api-wss/");
-        return super.onStartCommand(intent, flags, startId);
+        int ret = super.onStartCommand(intent, flags, startId);
+        Log.i(TAG, "onStartCommand " + ret);
+        listeners().onServiceStarted();
+        return ret;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        listeners().onServiceStopped();
         Log.i(TAG, "onDestroy");
     }
 
@@ -46,14 +49,13 @@ public class FHQClient extends Service {
         return null;
     }
 
-    // listener
-    private FHQListener mListener = null;
-    public void setListener(FHQListener listener) {
-        mListener = listener;
-    }
+    private static FHQListeners mListeners = null;
 
-    public void unsetListener() {
-        mListener = null;
+    public static FHQListeners listeners() {
+        if (mListeners == null) {
+            mListeners = new FHQListeners();
+        }
+        return mListeners;
     }
 
     public static void startService(Context ctx) {
@@ -125,16 +127,12 @@ public class FHQClient extends Service {
 
     public void onConnected() {
         Log.i(TAG, "onConnected");
-        if (mListener != null) {
-            mListener.onConnected();
-        }
+        listeners().onConnected();
     }
 
     public void onDisconnected() {
         Log.i(TAG, "onDisconnected");
-        if (mListener != null) {
-            mListener.onDisconnected();
-        }
+        listeners().onDisconnected();
     }
 
     public void login(String email, String password) {
