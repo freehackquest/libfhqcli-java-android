@@ -1,7 +1,10 @@
 package com.freehackquest.sample;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,13 +15,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
-import com.freehackquest.libfhqcli.FHQChatMessage;
+import com.freehackquest.libfhqcli.responses.FHQChatMessage;
 import com.freehackquest.libfhqcli.FHQClient;
 import com.freehackquest.libfhqcli.FHQListener;
-import com.freehackquest.libfhqcli.FHQNotification;
-import com.freehackquest.libfhqcli.FHQServerInfo;
+import com.freehackquest.libfhqcli.responses.FHQNotification;
+import com.freehackquest.libfhqcli.responses.FHQResponseError;
+import com.freehackquest.libfhqcli.responses.FHQServerInfo;
+import com.freehackquest.libfhqcli.requests.FHQRequestLogin;
+import com.freehackquest.libfhqcli.responses.FHQResponse;
 
-import java.util.ArrayList;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements FHQListener {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -119,9 +125,20 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
         btn_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String login = edt_login.getText().toString();
-                String password = edt_password.getText().toString();
-                FHQClient.api().login(login, password);
+                FHQRequestLogin req = new FHQRequestLogin();
+                req.email = edt_login.getText().toString();
+                req.password = edt_password.getText().toString();
+                FHQClient.api().login(req, new FHQResponse() {
+                    @Override
+                    public void onDone(JSONObject o) {
+                        addLog("Login success: " + o.toString());
+                    }
+
+                    @Override
+                    public void onError(FHQResponseError err) {
+                        addLog("Login failed: " + err.getError());
+                    }
+                });
             }
         });
     }
@@ -154,10 +171,32 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
         });
     }
 
+    private void showNotification(final String text) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, SampleApp.CHANNEL_ID)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentTitle("SampleApp")
+                        .setContentText(text)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(text))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                Notification notification = builder.build();
+
+                NotificationManager notificationManager =
+                        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                notificationManager.notify(1, notification);
+            }
+        });
+    }
+
     @Override
     public void onServiceStarted() {
         Log.i(TAG, "onServiceStarted");
         updateStatuses();
+        showNotification("ServiceStarted");
     }
 
     @Override
@@ -170,6 +209,7 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
     public void onConnected() {
         Log.i(TAG, "onConnected");
         updateStatuses();
+        showNotification("Connected");
     }
 
     @Override
@@ -180,12 +220,16 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
 
     @Override
     public void onChat(FHQChatMessage msg) {
-        addLog("Chat: [" + msg.getDateTime() + "] " + msg.getUser() + ": " + msg.getMessage());
+        String s = "Chat: [" + msg.getDateTime() + "] " + msg.getUser() + ": " + msg.getMessage();
+        addLog(s);
+        showNotification(s);
     }
 
     @Override
     public void onNotify(FHQNotification notify) {
-        addLog("Notification: [" + notify.getType() + ", " + notify.getSection() + "] " + notify.getMessage());
+        String s = "Notification: [" + notify.getType() + ", " + notify.getSection() + "] " + notify.getMessage();
+        addLog(s);
+        showNotification(s);
     }
 
     @Override

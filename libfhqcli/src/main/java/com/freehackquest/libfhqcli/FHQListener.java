@@ -1,5 +1,9 @@
 package com.freehackquest.libfhqcli;
 
+import com.freehackquest.libfhqcli.responses.FHQChatMessage;
+import com.freehackquest.libfhqcli.responses.FHQNotification;
+import com.freehackquest.libfhqcli.responses.FHQServerInfo;
+
 public interface FHQListener {
     void onServiceStarted();
     void onServiceStopped();

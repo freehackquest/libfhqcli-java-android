@@ -1,4 +1,4 @@
-package com.freehackquest.libfhqcli;
+package com.freehackquest.libfhqcli.responses;
 
 import android.util.Log;
 

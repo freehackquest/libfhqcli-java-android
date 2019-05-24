@@ -4,14 +4,15 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.neovisionaries.ws.client.HostnameUnverifiedException;
-import com.neovisionaries.ws.client.OpeningHandshakeException;
+import com.freehackquest.libfhqcli.requests.FHQRequestBase;
+import com.freehackquest.libfhqcli.requests.FHQRequestLogin;
+import com.freehackquest.libfhqcli.responses.FHQChatMessage;
+import com.freehackquest.libfhqcli.responses.FHQNotification;
+import com.freehackquest.libfhqcli.responses.FHQResponse;
+import com.freehackquest.libfhqcli.responses.FHQServerInfo;
 import com.neovisionaries.ws.client.WebSocket;
-import com.neovisionaries.ws.client.WebSocketAdapter;
-import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 
 import org.json.JSONException;
@@ -21,6 +22,8 @@ import java.util.ArrayList;
 
 public class FHQClient extends Service {
     private static final String TAG = FHQClient.class.getSimpleName();
+    private Integer mCounter = 1;
+    private ArrayList<FHQWaiter> mWaiters = new ArrayList<>();
 
     @Override
     public void onCreate() {
@@ -87,7 +90,6 @@ public class FHQClient extends Service {
 
     private WebSocket mWebSocket = null;
 
-
     public boolean isConnected() {
         if (mWebSocket == null) {
             return false;
@@ -141,6 +143,14 @@ public class FHQClient extends Service {
             listeners().onChat(new FHQChatMessage(jsonMessage));
         } else if (cmd.equals("server")) {
             listeners().onServerInfo(new FHQServerInfo(jsonMessage));
+        } else if (!m.isEmpty()) {
+            for (FHQWaiter w : mWaiters) {
+                if (w.getM().equals(m)) {
+                    mWaiters.remove(w);
+                    w.handle(jsonMessage);
+                    break;
+                }
+            }
         }
     }
 
@@ -159,24 +169,20 @@ public class FHQClient extends Service {
         listeners().onDisconnected();
     }
 
-    public void login(String email, String password) {
+    private void requestData(FHQRequestBase req, FHQResponse resp) {
         if (!isConnected()) {
+            resp.onError(null);
             return;
         }
-        String request = "{}";
-        try {
-            JSONObject json = new JSONObject();
-            json.put("cmd", "login");
-            json.put("m", "m1");
-            json.put("email", email);
-            json.put("password", password);
-            request = json.toString();
-        } catch(JSONException e) {
-            e.printStackTrace();
-            Log.e(TAG, "JSONException " + e.getMessage());
-            return;
-        }
+        String m = "m" + mCounter;
+        req.setM(m);
+        mWaiters.add(new FHQWaiter(req, resp));
+        String request = req.toJson().toString();
         Log.i(TAG, "Send Message " + request);
         mWebSocket.sendText(request);
+    }
+
+    public void login(FHQRequestLogin req, FHQResponse resp) {
+        requestData(req, resp);
     }
 }
