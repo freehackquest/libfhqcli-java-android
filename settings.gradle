@@ -1,1 +1,1 @@
-include ':app', ':libfhqcli', ':sample'
+include ':libfhqcli', ':sample'

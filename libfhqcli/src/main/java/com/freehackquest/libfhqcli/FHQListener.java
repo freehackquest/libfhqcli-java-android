@@ -7,4 +7,6 @@ public interface FHQListener {
     void onDisconnected();
     void onChat(FHQChatMessage msg);
     void onNotify(FHQNotification notify);
+    void onServerInfo(FHQServerInfo server);
+
 }

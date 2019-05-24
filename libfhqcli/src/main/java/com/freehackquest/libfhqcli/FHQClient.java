@@ -139,6 +139,8 @@ public class FHQClient extends Service {
             listeners().onNotify(new FHQNotification(jsonMessage));
         } else if (cmd.equals("chat")) {
             listeners().onChat(new FHQChatMessage(jsonMessage));
+        } else if (cmd.equals("server")) {
+            listeners().onServerInfo(new FHQServerInfo(jsonMessage));
         }
     }
 

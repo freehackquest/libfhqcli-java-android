@@ -16,6 +16,7 @@ import com.freehackquest.libfhqcli.FHQChatMessage;
 import com.freehackquest.libfhqcli.FHQClient;
 import com.freehackquest.libfhqcli.FHQListener;
 import com.freehackquest.libfhqcli.FHQNotification;
+import com.freehackquest.libfhqcli.FHQServerInfo;
 
 import java.util.ArrayList;
 
@@ -36,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
     private RecyclerView list_log = null;
     private LogAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
-    private ArrayList<String> log = new ArrayList();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,6 +145,15 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
         });
     }
 
+    private void addLog(final String msg) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mAdapter.addItem(msg);
+            }
+        });
+    }
+
     @Override
     public void onServiceStarted() {
         Log.i(TAG, "onServiceStarted");
@@ -171,11 +180,16 @@ public class MainActivity extends AppCompatActivity implements FHQListener {
 
     @Override
     public void onChat(FHQChatMessage msg) {
-
+        addLog("Chat: [" + msg.getDateTime() + "] " + msg.getUser() + ": " + msg.getMessage());
     }
 
     @Override
     public void onNotify(FHQNotification notify) {
+        addLog("Notification: [" + notify.getType() + ", " + notify.getSection() + "] " + notify.getMessage());
+    }
 
+    @Override
+    public void onServerInfo(FHQServerInfo server) {
+        addLog(server.getApp() + ":" + server.getVersion());
     }
 }

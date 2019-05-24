@@ -6,11 +6,19 @@ public class FHQListeners implements FHQListener {
     // listener
     private static ArrayList<FHQListener> listeners = new ArrayList<>();
     private static boolean bServiceStarted = false;
+    private static boolean bConnected = false;
+    private static FHQServerInfo serverInfo = null;
     public static void add(FHQListener l) {
         if (!listeners.contains(l)) {
             listeners.add(l);
             if (bServiceStarted) {
                 l.onServiceStarted();
+            }
+            if (bConnected) {
+                l.onConnected();
+            }
+            if (serverInfo != null) {
+                l.onServerInfo(serverInfo);
             }
         }
     }
@@ -37,6 +45,7 @@ public class FHQListeners implements FHQListener {
 
     @Override
     public void onConnected() {
+        bConnected = true;
         for (FHQListener l: listeners) {
             l.onConnected();
         }
@@ -44,6 +53,8 @@ public class FHQListeners implements FHQListener {
 
     @Override
     public void onDisconnected() {
+        bConnected = false;
+        serverInfo = null;
         for (FHQListener l: listeners) {
             l.onDisconnected();
         }
@@ -60,6 +71,14 @@ public class FHQListeners implements FHQListener {
     public void onNotify(FHQNotification notify) {
         for (FHQListener l: listeners) {
             l.onNotify(notify);
+        }
+    }
+
+    @Override
+    public void onServerInfo(FHQServerInfo server) {
+        serverInfo = server;
+        for (FHQListener l: listeners) {
+            l.onServerInfo(server);
         }
     }
 }
